@@ -1,0 +1,38 @@
+{
+  "name": "cfg-tools",
+  "version": "1.0.1",
+  "description": "Simple solution to define your environments",
+  "keywords": [
+    "env",
+    "config",
+    "cfg",
+    "environment",
+    "environments",
+    "envs",
+    "dotenv"
+  ],
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/v99k/js-cfg-tools"
+  },
+  "license": "MIT",
+  "author": "vladimir99kuzmin",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "tsc && node dist/index.js",
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.15",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  }
+}
