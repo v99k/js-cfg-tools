@@ -31,11 +31,11 @@ npm install cfg-utils
 // config.ts
 import { initCfg } from 'cfg-utils';
 
-const cfg = initCfg((env) => ({
-    nodeEnv: env.recommendToBeDefined('string', 'NODE_ENV', 'development'),
+const cfg = initCfg((ct) => ({
+    nodeEnv: ct.recommendToBeDefined('string', 'NODE_ENV', 'development'),
     app: {
-        port: env.mustBeDefined('number', 'PORT'),
-        debug: env.recommendToBeDefined('boolean', 'DEBUG', false),
+        port: ct.mustBeDefined('number', 'PORT'),
+        debug: ct.recommendToBeDefined('boolean', 'DEBUG', false),
     },
 }));
 
