@@ -1,10 +1,10 @@
-import { config, DotenvConfigOptions } from 'dotenv';
+import { config, DotenvConfigOptions } from "dotenv";
 
 /**
  * @description
  * Supported env variable types
  */
-type TTypes = 'string' | 'number' | 'boolean';
+type TTypes = "string" | "number" | "boolean";
 
 type TypeMap = {
   string: string;
@@ -18,8 +18,37 @@ type TypeMap = {
  */
 export type CfgInitFn<T> = (tools: CfgTools) => T;
 
-export function initCfg<T>(initFn: CfgInitFn<T>, opts?: DotenvConfigOptions): Cfg<T> {
+export function initCfg<T>(
+  initFn: CfgInitFn<T>,
+  opts?: DotenvConfigOptions
+): Cfg<T> {
   return new Cfg(initFn, opts);
+}
+
+/**
+ * @description
+ * Wraps the CfgTools methods to be used as a function.
+ *
+ * For cases when you need to create your own aliases for the CfgTools methods.
+ *
+ * @example
+ * const cfg = initCfg(initFn);
+ * const { mustBeDefined: must, recommendToBeDefined: should } = bindCfgTools(cfg.tools);
+ *
+ * const a = must("string", "A_STRING_VAR");
+ * const b = should("number", "A_NUMBER_VAR", 0);
+ */
+export function bindCfgTools(ct: CfgTools) {
+  return {
+    mustBeDefined: <T extends TTypes>(type: T, key: string): TypeMap[T] =>
+      ct.mustBeDefined(type, key),
+
+    recommendToBeDefined: <T extends TTypes>(
+      type: T,
+      key: string,
+      def: TypeMap[T]
+    ): TypeMap[T] => ct.recommendToBeDefined(type, key, def),
+  };
 }
 
 /**
@@ -27,10 +56,7 @@ export function initCfg<T>(initFn: CfgInitFn<T>, opts?: DotenvConfigOptions): Cf
  * Tools available to env factory (type-safe wrappers)
  */
 export class CfgTools {
-  constructor(
-    private errors: string[],
-    private warnings: string[],
-  ) {}
+  constructor(private errors: string[], private warnings: string[]) {}
 
   /**
    * @description
@@ -43,7 +69,7 @@ export class CfgTools {
     const val = process.env[key];
     if (val === undefined) {
       this.errors.push(`❌ ${key} is not defined`);
-      return this.castToType(type, '', key) as TypeMap[T];
+      return this.castToType(type, "", key) as TypeMap[T];
     }
 
     return this.castToType(type, val, key) as TypeMap[T];
@@ -60,11 +86,13 @@ export class CfgTools {
   recommendToBeDefined<T extends TTypes>(
     type: T,
     key: string,
-    defaultValue: TypeMap[T],
+    defaultValue: TypeMap[T]
   ): TypeMap[T] {
     const val = process.env[key];
     if (val === undefined) {
-      this.warnings.push(`⚠️  ${key} is not defined, using default value: "${defaultValue}"`);
+      this.warnings.push(
+        `⚠️  ${key} is not defined, using default value: "${defaultValue}"`
+      );
       return defaultValue;
     }
 
@@ -75,12 +103,12 @@ export class CfgTools {
     type: T,
     raw: string,
     key: string,
-    fallback?: TypeMap[T],
+    fallback?: TypeMap[T]
   ): TypeMap[T] {
     switch (type) {
-      case 'string':
+      case "string":
         return raw as TypeMap[T];
-      case 'number': {
+      case "number": {
         const num = parseFloat(raw);
         if (isNaN(num)) {
           const msg = `❌ ${key} is not a number`;
@@ -89,13 +117,13 @@ export class CfgTools {
         }
         return num as TypeMap[T];
       }
-      case 'boolean': {
-        if (raw !== 'true' && raw !== 'false') {
+      case "boolean": {
+        if (raw !== "true" && raw !== "false") {
           const msg = `❌ ${key} is not a boolean, expected 'true' or 'false'`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
-        return (raw === 'true') as TypeMap[T];
+        return (raw === "true") as TypeMap[T];
       }
       default:
         return fallback as TypeMap[T];
@@ -131,14 +159,14 @@ export class Cfg<TEnv> {
 
   private proceedWarnings() {
     if (this.warnings.length > 0) {
-      console.warn('ENVIRONMENT WARNINGS:\n' + this.warnings.join('\n'));
+      console.warn("ENVIRONMENT WARNINGS:\n" + this.warnings.join("\n"));
     }
   }
 
   private proceedErrors() {
     if (this.errors.length > 0) {
-      const errors = this.errors.join('\n');
-      console.error('ENVIRONMENT ERRORS:\n' + errors);
+      const errors = this.errors.join("\n");
+      console.error("ENVIRONMENT ERRORS:\n" + errors);
       throw new Error(`Environment configuration errors detected:\n${errors}`);
     }
   }

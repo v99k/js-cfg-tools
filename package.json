@@ -1,6 +1,6 @@
 {
   "name": "cfg-tools",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Simple solution to define your environments",
   "keywords": [
     "env",
@@ -20,7 +20,6 @@
   },
   "license": "MIT",
   "author": "vladimir99kuzmin",
-  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
