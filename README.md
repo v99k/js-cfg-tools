@@ -34,8 +34,8 @@ import { initCfg } from 'cfg-utils';
 const cfg = initCfg((env) => ({
     nodeEnv: env.recommendToBeDefined('string', 'NODE_ENV', 'development'),
     app: {
-    port: env.mustBeDefined('number', 'PORT'),
-    debug: env.recommendToBeDefined('boolean', 'DEBUG', false),
+        port: env.mustBeDefined('number', 'PORT'),
+        debug: env.recommendToBeDefined('boolean', 'DEBUG', false),
     },
 }));
 
@@ -106,4 +106,4 @@ type AppEnv = typeof cfg.env;
 
 ## 🧷 License
 
-MIT
+[MIT](./LICENSE)
