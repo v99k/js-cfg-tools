@@ -51,6 +51,20 @@ console.log(AppEnv.app.debug); // boolean
 console.log(AppEnv.nodeEnv); // string
 ```
 
+### Features
+
+You can also use your own aliases for "recommendToBeDefined" and "mustBeDefined" methods.
+
+```ts
+import { initCfg, bindCfgTools } from 'cfg-utils';
+
+ const cfg = initCfg(initFn);
+ const { mustBeDefined: must, recommendToBeDefined: should } = bindCfgTools(cfg.tools);
+
+ const a = must("string", "A_STRING_VAR");
+ const b = should("number", "A_NUMBER_VAR", 0);
+```
+
 ---
 
 ## 🛠️ API
