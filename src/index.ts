@@ -1,16 +1,26 @@
 import { config, DotenvConfigOptions } from "dotenv";
+import { isIP } from "net";
 
 /**
  * @description
  * Supported env variable types
  */
-type TTypes = "string" | "number" | "boolean";
 
 type TypeMap = {
   string: string;
   number: number;
   boolean: boolean;
+  port: number;
+  url: string;
+  host: string;
+  json: unknown;
+  email: string;
+  integer: number;
+  uuidv4: string;
+  array: unknown[];
 };
+
+type TTypes = keyof TypeMap;
 
 /**
  * @description
@@ -110,20 +120,112 @@ export class CfgTools {
         return raw as TypeMap[T];
       case "number": {
         const num = parseFloat(raw);
+
         if (isNaN(num)) {
           const msg = `❌ ${key} is not a number`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
+
         return num as TypeMap[T];
       }
       case "boolean": {
-        if (raw !== "true" && raw !== "false") {
-          const msg = `❌ ${key} is not a boolean, expected 'true' or 'false'`;
+        const trueValues = ["true", "1", "yes", "on", "enable", "enabled", "t", "y"];
+        const falseValues = ["false", "0", "no", "off", "disable", "disabled", "f", "n"];
+
+        if (!trueValues.includes(raw.toLocaleLowerCase()) && !falseValues.includes(raw.toLocaleLowerCase())) {
+          const msg = `❌ ${key} is not a boolean, expected one of the following: [${trueValues.join(", ")}] or [${falseValues.join(", ")}]`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
-        return (raw === "true") as TypeMap[T];
+
+        return (trueValues.includes(raw.toLocaleLowerCase())) as TypeMap[T];
+      }
+      case "port": {
+        const num = parseInt(raw);
+
+        if (isNaN(num) || num < 1 || num > 65535) {
+          const msg = `❌ ${key} is not a valid port, expected a number between 1 and 65535`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
+
+        return num as TypeMap[T];
+      }
+      case "url": {
+        const url = new URL(raw);
+
+        if (!url.protocol) {
+          const msg = `❌ ${key} is not a valid URL`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
+
+        return raw as TypeMap[T];
+      }
+      case "host": {
+        const isValid = isIP(raw);
+
+        if (!isValid) {
+          const msg = `❌ ${key} is not a valid host`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
+
+        return raw as TypeMap[T];
+      }
+      case "json": {
+        try {
+          return JSON.parse(raw) as TypeMap[T];
+        } catch (error) {
+          const msg = `❌ ${key} is not a valid JSON`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
+      }
+      case "email": {
+        const emailRegex =
+          /^(?!.*\.\.)[a-zA-Z0-9](\.?[a-zA-Z0-9_\-+%])*@[a-zA-Z0-9](\.?[a-zA-Z0-9\-])*\.[a-zA-Z]{2,}$/;
+
+        if (!emailRegex.test(raw)) {
+          const msg = `❌ ${key} is not a valid email`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
+
+        return raw as TypeMap[T];
+      }
+      case "integer": {
+        const numInt = parseInt(raw);
+        const numFloat = parseFloat(raw);
+
+        if (isNaN(numInt) || numInt !== numFloat) {
+          const msg = `❌ ${key} is not an integer`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
+
+        return numInt as TypeMap[T];
+      }
+      case "uuidv4": {
+        const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+        if (!uuidV4Regex.test(raw)) {
+          const msg = `❌ ${key} is not a valid UUIDV4`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
+
+        return raw as TypeMap[T];
+      }
+      case "array": {
+        try {
+          return JSON.parse(raw) as TypeMap[T];
+        } catch (error) {
+          const msg = `❌ ${key} is not a valid array`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
       }
       default:
         return fallback as TypeMap[T];
