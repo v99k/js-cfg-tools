@@ -122,7 +122,9 @@ export class CfgTools {
         const num = parseFloat(raw);
 
         if (isNaN(num)) {
-          const msg = `❌ ${key} is not a number`;
+          const msg = fallback
+            ? `⚠️  ${key} is not a number, using default value: "${fallback}"`
+            : `❌ ${key} is not a number`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -130,22 +132,49 @@ export class CfgTools {
         return num as TypeMap[T];
       }
       case "boolean": {
-        const trueValues = ["true", "1", "yes", "on", "enable", "enabled", "t", "y"];
-        const falseValues = ["false", "0", "no", "off", "disable", "disabled", "f", "n"];
+        const trueValues = [
+          "true",
+          "1",
+          "yes",
+          "on",
+          "enable",
+          "enabled",
+          "t",
+          "y",
+        ];
+        const falseValues = [
+          "false",
+          "0",
+          "no",
+          "off",
+          "disable",
+          "disabled",
+          "f",
+          "n",
+        ];
 
-        if (!trueValues.includes(raw.toLocaleLowerCase()) && !falseValues.includes(raw.toLocaleLowerCase())) {
-          const msg = `❌ ${key} is not a boolean, expected one of the following: [${trueValues.join(", ")}] or [${falseValues.join(", ")}]`;
+        if (
+          !trueValues.includes(raw.toLocaleLowerCase()) &&
+          !falseValues.includes(raw.toLocaleLowerCase())
+        ) {
+          const msg = fallback
+            ? `⚠️  ${key} is not a boolean, using default value: "${fallback}"`
+            : `❌ ${key} is not a boolean, expected one of the following: [${trueValues.join(
+                ", "
+              )}] or [${falseValues.join(", ")}]`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
 
-        return (trueValues.includes(raw.toLocaleLowerCase())) as TypeMap[T];
+        return trueValues.includes(raw.toLocaleLowerCase()) as TypeMap[T];
       }
       case "port": {
         const num = parseInt(raw);
 
         if (isNaN(num) || num < 1 || num > 65535) {
-          const msg = `❌ ${key} is not a valid port, expected a number between 1 and 65535`;
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid port, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid port, expected a number between 1 and 65535`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -153,10 +182,21 @@ export class CfgTools {
         return num as TypeMap[T];
       }
       case "url": {
-        const url = new URL(raw);
+        let url: URL;
+        try {
+          url = new URL(raw);
+        } catch {
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid URL, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid URL`;
+          fallback ? this.warnings.push(msg) : this.errors.push(msg);
+          return fallback as TypeMap[T];
+        }
 
-        if (!url.protocol) {
-          const msg = `❌ ${key} is not a valid URL`;
+        if (!url?.protocol) {
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid URL, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid URL`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -167,7 +207,9 @@ export class CfgTools {
         const isValid = isIP(raw);
 
         if (!isValid) {
-          const msg = `❌ ${key} is not a valid host`;
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid host, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid host`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -178,7 +220,9 @@ export class CfgTools {
         try {
           return JSON.parse(raw) as TypeMap[T];
         } catch (error) {
-          const msg = `❌ ${key} is not a valid JSON`;
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid JSON, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid JSON`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -188,7 +232,9 @@ export class CfgTools {
           /^(?!.*\.\.)[a-zA-Z0-9](\.?[a-zA-Z0-9_\-+%])*@[a-zA-Z0-9](\.?[a-zA-Z0-9\-])*\.[a-zA-Z]{2,}$/;
 
         if (!emailRegex.test(raw)) {
-          const msg = `❌ ${key} is not a valid email`;
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid email, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid email`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -200,7 +246,9 @@ export class CfgTools {
         const numFloat = parseFloat(raw);
 
         if (isNaN(numInt) || numInt !== numFloat) {
-          const msg = `❌ ${key} is not an integer`;
+          const msg = fallback
+            ? `⚠️  ${key} is not an integer, using default value: "${fallback}"`
+            : `❌ ${key} is not an integer`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -208,10 +256,13 @@ export class CfgTools {
         return numInt as TypeMap[T];
       }
       case "uuidv4": {
-        const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const uuidV4Regex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
         if (!uuidV4Regex.test(raw)) {
-          const msg = `❌ ${key} is not a valid UUIDV4`;
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid UUIDV4, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid UUIDV4`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
@@ -222,7 +273,9 @@ export class CfgTools {
         try {
           return JSON.parse(raw) as TypeMap[T];
         } catch (error) {
-          const msg = `❌ ${key} is not a valid array`;
+          const msg = fallback
+            ? `⚠️  ${key} is not a valid array, using default value: "${fallback}"`
+            : `❌ ${key} is not a valid array`;
           fallback ? this.warnings.push(msg) : this.errors.push(msg);
           return fallback as TypeMap[T];
         }
