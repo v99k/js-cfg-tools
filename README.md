@@ -86,11 +86,11 @@ Supported types:
 
 ## 📁 Example .env
 
-`env
+```env
 PORT=3000
 NODE_ENV=production
 DEBUG=true
-`
+```
 
 ---
 
@@ -98,9 +98,9 @@ DEBUG=true
 
 No need to define a separate type — config type is inferred automatically:
 
-`ts
+```ts
 type AppEnv = typeof cfg.env;
-`
+```
 
 ---
 
