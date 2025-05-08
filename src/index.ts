@@ -117,16 +117,45 @@ export class CfgTools {
   ): TypeMap[T] {
     switch (type) {
       case "string":
+        const isHasDefault = fallback !== undefined;
+        if (typeof raw !== "string") {
+          if (isHasDefault) {
+            this.warnings.push(
+              `⚠️  ${key} is not a string, using default value: "${fallback}"`
+            );
+
+            return fallback ?? ("" as TypeMap[T]);
+          } else {
+            this.errors.push(`❌ ${key} is not a string`);
+          }
+        }
+
         return raw as TypeMap[T];
       case "number": {
         const num = parseFloat(raw);
 
         if (isNaN(num)) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a number, using default value: "${fallback}"`
-            : `❌ ${key} is not a number`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            const fallbackNum = parseFloat(`${fallback}`);
+
+            if (isNaN(fallbackNum)) {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not a valid number`
+              );
+
+              return fallback ?? (0 as TypeMap[T]);
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a number, using default value: "${fallback}"`
+            );
+
+            return fallback ?? (0 as TypeMap[T]);
+          } else {
+            this.errors.push(`❌ ${key} is not a number`);
+          }
         }
 
         return num as TypeMap[T];
@@ -157,13 +186,27 @@ export class CfgTools {
           !trueValues.includes(raw.toLocaleLowerCase()) &&
           !falseValues.includes(raw.toLocaleLowerCase())
         ) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a boolean, using default value: "${fallback}"`
-            : `❌ ${key} is not a boolean, expected one of the following: [${trueValues.join(
-                ", "
-              )}] or [${falseValues.join(", ")}]`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            if (typeof fallback !== "boolean") {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not a valid boolean`
+              );
+
+              return fallback ?? (false as TypeMap[T]);
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a boolean, using default value: "${fallback}"`
+            );
+
+            return fallback ?? (false as TypeMap[T]);
+          } else {
+            `❌ ${key} is not a boolean, expected one of the following: [${trueValues.join(
+              ", "
+            )}] or [${falseValues.join(", ")}]`;
+          }
         }
 
         return trueValues.includes(raw.toLocaleLowerCase()) as TypeMap[T];
@@ -172,11 +215,29 @@ export class CfgTools {
         const num = parseInt(raw);
 
         if (isNaN(num) || num < 1 || num > 65535) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid port, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid port, expected a number between 1 and 65535`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            const fallbackInt = parseInt(`${fallback}`);
+
+            if (isNaN(fallbackInt) || fallbackInt < 1 || fallbackInt > 65535) {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not a valid port`
+              );
+
+              return fallback || (1 as TypeMap[T]);
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a valid port, using default value: "${fallback}"`
+            );
+
+            return fallback || (1 as TypeMap[T]);
+          } else {
+            this.errors.push(
+              `❌ ${key} is not a valid port, expected a number between 1 and 65535`
+            );
+          }
         }
 
         return num as TypeMap[T];
@@ -186,19 +247,33 @@ export class CfgTools {
         try {
           url = new URL(raw);
         } catch {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid URL, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid URL`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            try {
+              url = new URL(`${fallback}`);
+            } catch {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not a valid URL`
+              );
+
+              return fallback ?? ("" as TypeMap[T]);
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a valid URL, using default value: "${fallback}"`
+            );
+          } else {
+            this.errors.push(`❌ ${key} is not a valid URL`);
+
+            return fallback ?? ("" as TypeMap[T]);
+          }
         }
 
         if (!url?.protocol) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid URL, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid URL`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          this.errors.push(
+            `❌ ${key} is not a valid URL, protocol is undefined`
+          );
         }
 
         return raw as TypeMap[T];
@@ -207,24 +282,44 @@ export class CfgTools {
         const isValid = isIP(raw);
 
         if (!isValid) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid host, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid host`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            if (!isIP(`${fallback}`)) {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not a valid host`
+              );
+
+              return fallback as TypeMap[T];
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a valid host, using default value: "${fallback}"`
+            );
+
+            return fallback as TypeMap[T];
+          } else {
+            this.errors.push(`❌ ${key} is not a valid host`);
+          }
         }
 
         return raw as TypeMap[T];
       }
       case "json": {
         try {
-          return JSON.parse(raw) as TypeMap[T];
+          return JSON.parse(raw);
         } catch (error) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid JSON, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid JSON`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            this.warnings.push(
+              `⚠️  ${key} is not a valid JSON, using default value`
+            );
+
+            return fallback as TypeMap[T];
+          } else {
+            this.errors.push(`❌ ${key} is not a valid JSON`);
+          }
         }
       }
       case "email": {
@@ -232,11 +327,25 @@ export class CfgTools {
           /^(?!.*\.\.)[a-zA-Z0-9](\.?[a-zA-Z0-9_\-+%])*@[a-zA-Z0-9](\.?[a-zA-Z0-9\-])*\.[a-zA-Z]{2,}$/;
 
         if (!emailRegex.test(raw)) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid email, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid email`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            if (!emailRegex.test(`${fallback}`)) {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not a valid email`
+              );
+
+              return fallback as TypeMap[T];
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a valid email, using default value: "${fallback}"`
+            );
+
+            return fallback as TypeMap[T];
+          } else {
+            this.errors.push(`❌ ${key} is not a valid email`);
+          }
         }
 
         return raw as TypeMap[T];
@@ -246,11 +355,29 @@ export class CfgTools {
         const numFloat = parseFloat(raw);
 
         if (isNaN(numInt) || numInt !== numFloat) {
-          const msg = fallback
-            ? `⚠️  ${key} is not an integer, using default value: "${fallback}"`
-            : `❌ ${key} is not an integer`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            const fallbackStr = `${fallback}`;
+            const fallbackInt = parseInt(fallbackStr);
+            const fallbackFloat = parseFloat(fallbackStr);
+
+            if (isNaN(fallbackInt) || fallbackInt !== fallbackFloat) {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not an integer`
+              );
+
+              return fallback as TypeMap[T];
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not an integer, using default value: "${fallback}"`
+            );
+
+            return fallback as TypeMap[T];
+          } else {
+            this.errors.push(`❌ ${key} is not an integer`);
+          }
         }
 
         return numInt as TypeMap[T];
@@ -260,28 +387,66 @@ export class CfgTools {
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
         if (!uuidV4Regex.test(raw)) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid UUIDV4, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid UUIDV4`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            if (!uuidV4Regex.test(`${fallback}`)) {
+              this.errors.push(
+                `❌ fallback value for ${key} (${fallback}) is not a valid UUIDV4`
+              );
+
+              return (
+                fallback ??
+                ("00000000-0000-0000-0000-000000000000" as TypeMap[T])
+              );
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a valid UUIDV4, using default value: "${fallback}"`
+            );
+
+            return fallback;
+          } else {
+            this.errors.push(`❌ ${key} is not a valid UUIDV4`);
+          }
         }
 
         return raw as TypeMap[T];
       }
       case "array": {
+        let parsed: unknown;
         try {
-          return JSON.parse(raw) as TypeMap[T];
+          parsed = JSON.parse(raw);
+
+          if (!Array.isArray(parsed)) {
+            this.errors.push(`❌ ${key} (JSON: ${raw}) is not an array`);
+
+            return [] as TypeMap[T];
+          }
+
+          return parsed as TypeMap[T];
         } catch (error) {
-          const msg = fallback
-            ? `⚠️  ${key} is not a valid array, using default value: "${fallback}"`
-            : `❌ ${key} is not a valid array`;
-          fallback ? this.warnings.push(msg) : this.errors.push(msg);
-          return fallback as TypeMap[T];
+          const isHasDefault = fallback !== undefined;
+
+          if (isHasDefault) {
+            if (!Array.isArray(fallback)) {
+              this.errors.push(`❌ fallback value for ${key} is not an array`);
+
+              return fallback as TypeMap[T];
+            }
+
+            this.warnings.push(
+              `⚠️  ${key} is not a valid array, using default value: "${fallback}"`
+            );
+
+            return fallback as TypeMap[T];
+          } else {
+            this.errors.push(`❌ ${key} is not a valid array`);
+          }
         }
       }
       default:
-        return fallback as TypeMap[T];
+        throw new Error(`Unsupported type: ${type}`);
     }
   }
 }
