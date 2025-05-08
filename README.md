@@ -1,4 +1,4 @@
-# cfg-utils
+# cfg-tools
 
 > A tiny, type-safe configuration helper for environment variables based on [dotenv](https://www.npmjs.com/package/dotenv) with developer-friendly validation.
 
@@ -18,7 +18,7 @@
 ## 📦 Installation
 
 ```bash
-npm install cfg-utils
+npm install cfg-tools
 ```
 
 > `dotenv` is a required peer dependency.
@@ -29,7 +29,7 @@ npm install cfg-utils
 
 ```ts
 // config.ts
-import { initCfg } from "cfg-utils";
+import { initCfg } from "cfg-tools";
 
 const cfg = initCfg((ct) => ({
   nodeEnv: ct.recommendToBeDefined("string", "NODE_ENV", "development"),
@@ -56,7 +56,7 @@ console.log(AppEnv.nodeEnv); // string
 You can also use your own aliases for "recommendToBeDefined" and "mustBeDefined" methods.
 
 ```ts
-import { initCfg, bindCfgTools } from "cfg-utils";
+import { initCfg, bindCfgTools } from "cfg-tools";
 
 const cfg = initCfg(initFn);
 const { mustBeDefined: must, recommendToBeDefined: should } = bindCfgTools(
