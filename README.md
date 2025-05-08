@@ -104,7 +104,7 @@ Supported types:
 - `'email'` - get email (format: qwe@rty.ui)
 - `'integer'` - get integer value
 - `'uuidv4'` - get uuid v4
-- `'array'` - get array
+- `'array'` - get array (json-like: [1, 2, 3, 4, 5] or plain (each element will be string): 1,2,3,4,5)
 
 ---
 
