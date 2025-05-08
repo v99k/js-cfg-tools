@@ -24,12 +24,14 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "tsc && node dist/index.js",
+    "test": "npx ts-node tests/test.ts",
     "build": "tsc",
     "dev": "tsc --watch"
   },
   "devDependencies": {
     "@types/node": "^22.15.15",
-    "typescript": "^5.0.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "dotenv": "^16.5.0"

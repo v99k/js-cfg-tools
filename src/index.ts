@@ -279,13 +279,13 @@ export class CfgTools {
         return raw as TypeMap[T];
       }
       case "host": {
-        const isValid = isIP(raw);
+        const isValid = isIP(raw) || raw === "localhost";
 
         if (!isValid) {
           const isHasDefault = fallback !== undefined;
 
           if (isHasDefault) {
-            if (!isIP(`${fallback}`)) {
+            if (!isIP(`${fallback}`) && fallback !== "localhost") {
               this.errors.push(
                 `❌ fallback value for ${key} (${fallback}) is not a valid host`
               );
@@ -457,12 +457,12 @@ export class CfgTools {
  */
 export class Cfg<TEnv> {
   private environmentVariables: TEnv;
-  private errors: string[] = [];
-  private warnings: string[] = [];
+  private errorsList: string[] = [];
+  private warningsList: string[] = [];
 
   constructor(initFn: CfgInitFn<TEnv>, opts?: DotenvConfigOptions) {
     config(opts ?? {});
-    const tools = new CfgTools(this.errors, this.warnings);
+    const tools = new CfgTools(this.errorsList, this.warningsList);
     this.environmentVariables = initFn(tools);
 
     this.proceedWarnings();
@@ -477,15 +477,23 @@ export class Cfg<TEnv> {
     return structuredClone(this.environmentVariables);
   }
 
+  public get errors(): string[] {
+    return this.errorsList;
+  }
+
+  public get warnings(): string[] {
+    return this.warningsList;
+  }
+
   private proceedWarnings() {
-    if (this.warnings.length > 0) {
-      console.warn("ENVIRONMENT WARNINGS:\n" + this.warnings.join("\n"));
+    if (this.warningsList.length > 0) {
+      console.warn("ENVIRONMENT WARNINGS:\n" + this.warningsList.join("\n"));
     }
   }
 
   private proceedErrors() {
-    if (this.errors.length > 0) {
-      const errors = this.errors.join("\n");
+    if (this.errorsList.length > 0) {
+      const errors = this.errorsList.join("\n");
       console.error("ENVIRONMENT ERRORS:\n" + errors);
       throw new Error(`Environment configuration errors detected:\n${errors}`);
     }
